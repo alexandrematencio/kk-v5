@@ -43,6 +43,22 @@ function setupAnimations() {
   const root = menuSectionRef.value
   if (!root) return
 
+  // Scroll-driven preview: each row crossing the center band swaps the pinned
+  // frame's image, first dish to last. DOM order matches the flat data order.
+  const flatItems = categories.flatMap(cat => menuData[cat])
+  root.querySelectorAll('.dish-row').forEach((row, i) => {
+    const item = flatItems[i]
+    if (!item) return
+    ScrollTrigger.create({
+      trigger: row,
+      start: 'top 60%',
+      end: 'bottom 40%',
+      onToggle: (self) => {
+        if (self.isActive) setActive(item)
+      },
+    })
+  })
+
   gsap.fromTo('.menu-title, .menu-eyebrow',
     { opacity: 0, y: 40 },
     {
@@ -236,14 +252,15 @@ function setupAnimations() {
   line-height: 1;
 }
 
-/* Editorial index layout: list left, fixed preview right */
+/* Editorial index layout: list left, pinned preview right.
+   No align-items: start — the preview column must stretch the full grid
+   height so its sticky child can travel from the first to the last dish. */
 .menu-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
   gap: 5rem;
   max-width: 1200px;
   margin: 0 auto;
-  align-items: start;
 }
 
 .chapter {
@@ -393,18 +410,27 @@ function setupAnimations() {
   display: none;
 }
 
-/* Sticky preview */
+/* Pinned preview — sticks strictly centered in the viewport while the list
+   scrolls, releases naturally when the column (= last dish) ends. */
 .menu-preview-col {
   min-width: 0;
 }
 
 .preview-sticky {
   position: sticky;
-  top: calc(var(--nav-height) + 2.5rem);
+  top: 0;
+  /* Full-viewport sticky shell flex-centers the frame — exact vertical
+     centering at any viewport/frame size, no magic px offsets */
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .preview-frame {
   position: relative;
+  width: min(100%, 380px);
   aspect-ratio: 4 / 5;
   overflow: hidden;
   border: 1px solid var(--color-text);
@@ -440,6 +466,7 @@ function setupAnimations() {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
+  width: min(100%, 380px);
   margin-top: 0.8rem;
   font-size: 0.72rem;
   letter-spacing: 0.16em;
