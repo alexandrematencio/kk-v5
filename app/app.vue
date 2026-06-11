@@ -46,7 +46,10 @@ onMounted(() => {
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-html { scroll-behavior: auto; }
+/* scrollbar-gutter: stable reserves the scrollbar gutter permanently so that
+   locking scroll (body overflow:hidden) when the burger menu opens never widens
+   the viewport — otherwise the fixed nav + burger jump 16px when the menu opens. */
+html { scroll-behavior: auto; scrollbar-gutter: stable; }
 
 html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }

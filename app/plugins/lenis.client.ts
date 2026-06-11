@@ -5,6 +5,12 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 export default defineNuxtPlugin((nuxtApp) => {
   gsap.registerPlugin(ScrollTrigger)
 
+  // Mobile browsers resize the viewport when the address bar shows/hides during
+  // scroll. With a pinned section (Philosophie), that resize shifts the pin
+  // spacer and drags the sections below it (Story, Menu) out of place — the menu
+  // appears "stuck halfway up". This tells ScrollTrigger to ignore those resizes.
+  ScrollTrigger.config({ ignoreMobileResize: true })
+
   nuxtApp.hook('app:mounted', () => {
     const lenis = new Lenis({
       duration: 1.2,
