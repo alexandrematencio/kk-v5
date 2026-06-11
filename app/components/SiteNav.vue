@@ -163,7 +163,9 @@ onMounted(() => {
     if (!barRef.value) return
     gsap.fromTo(barRef.value,
       { y: -80, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' },
+      // clearProps strips the leftover transform so the fixed nav sits with no
+      // matrix() — avoids iOS compositing quirks on a position:fixed element.
+      { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out', clearProps: 'transform' },
     )
   }
   if (splashDone.value) {
@@ -613,6 +615,15 @@ onBeforeUnmount(() => {
 
 @media (max-width: 768px) {
   .site-nav { padding: 0 16px; }
+
+  /* iOS Safari clips/detaches a position:fixed element that has backdrop-filter
+     during scroll — the nav appears stuck half off the top. Use a solid cream
+     background on mobile instead (the frosted blur stays on desktop). */
+  .site-nav.scrolled:not(.open) {
+    background: rgba(250, 244, 239, 0.98);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 
   .nav-brand-logo { height: 30px; }
 

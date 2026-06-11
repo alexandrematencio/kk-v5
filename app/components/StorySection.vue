@@ -133,6 +133,10 @@ function initAnimation() {
   padding: 8rem 2rem 6rem;
   background: var(--color-cream);
   color: var(--color-text);
+  /* The block reveal animates x: ±36px before entering view; clip it so those
+     offsets never widen the document (horizontal overflow shifts the fixed nav
+     + burger when the menu locks scroll). overflow-x: clip keeps vertical flow. */
+  overflow-x: clip;
 }
 
 .story-container {
