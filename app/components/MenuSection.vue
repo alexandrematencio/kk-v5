@@ -8,6 +8,18 @@ const { menuData, categories, categoryMeta } = useMenu()
 const menuSectionRef = ref<HTMLElement | null>(null)
 const activeDish = ref({ img: 'pad-thai-1.jpg', title: 'Pad Thai', plate: 4 })
 
+// Mobile sticky category tabs (same device as kk-v1)
+const activeChapter = ref(categories[0])
+
+function jumpToChapter(cat: typeof categories[number]) {
+  const el = document.querySelector(`#chapter-${cat}`)
+  if (!el) return
+  const lenis = (window as any).__lenis
+  // Clear the fixed nav + the sticky tabs bar
+  if (lenis) lenis.scrollTo(el, { offset: -140 })
+  else el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 // Global plate numbers across categories for the "Pl. 0X" captions
 const plateNumbers = computed(() => {
   const map = new Map<string, number>()
@@ -42,6 +54,18 @@ onBeforeUnmount(() => {
 function setupAnimations() {
   const root = menuSectionRef.value
   if (!root) return
+
+  // Active chapter tracking for the mobile sticky tabs (kk-v1 device)
+  categories.forEach((cat) => {
+    ScrollTrigger.create({
+      trigger: `#chapter-${cat}`,
+      start: 'top 30%',
+      end: 'bottom 30%',
+      onToggle: (self) => {
+        if (self.isActive) activeChapter.value = cat
+      },
+    })
+  })
 
   // Scroll-driven preview: each row crossing the center band swaps the pinned
   // frame's image, first dish to last. DOM order matches the flat data order.
@@ -153,6 +177,20 @@ function setupAnimations() {
       <h2 class="menu-title">La carte</h2>
     </header>
 
+    <!-- Mobile-only sticky category tabs — same bilingual device as kk-v1 -->
+    <nav class="menu-tabs">
+      <button
+        v-for="cat in categories"
+        :key="cat"
+        class="tab"
+        :class="{ active: activeChapter === cat }"
+        @click="jumpToChapter(cat)"
+      >
+        <span class="tab-thai">{{ categoryMeta[cat].thai }}</span>
+        <span class="tab-latin">{{ categoryMeta[cat].latin }}</span>
+      </button>
+    </nav>
+
     <div class="menu-layout">
       <div class="menu-index">
         <article
@@ -250,6 +288,82 @@ function setupAnimations() {
   font-weight: 700;
   color: var(--color-text);
   line-height: 1;
+}
+
+/* Mobile sticky category tabs — ported from kk-v1, anchored below the fixed nav.
+   Desktop keeps the editorial index + pinned preview, so the tabs stay hidden. */
+.menu-tabs {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .menu-tabs {
+    position: sticky;
+    top: var(--nav-height);
+    z-index: 20;
+    display: flex;
+    gap: 1.25rem;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding: 1rem 0.5rem;
+    margin: 1.5rem 0 1rem;
+    background: rgba(247, 247, 247, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--color-border);
+    scrollbar-width: none;
+  }
+
+  .menu-tabs::-webkit-scrollbar { display: none; }
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  padding: 0.5rem 0;
+  cursor: pointer;
+  position: relative;
+  font-family: var(--font-body);
+}
+
+.tab-thai {
+  font-size: 0.75rem;
+  color: var(--color-thai);
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+.tab-latin {
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: capitalize;
+  transition: color 0.2s ease;
+}
+
+.tab:hover .tab-latin {
+  color: var(--color-blue);
+}
+
+.tab.active .tab-latin {
+  color: var(--color-blue);
+  font-weight: 700;
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1rem;
+  height: 2px;
+  background: var(--color-blue);
 }
 
 /* Editorial index layout: list left, pinned preview right.
